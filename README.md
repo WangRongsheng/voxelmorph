@@ -1,75 +1,75 @@
-# voxelmorph: Learning-Based Image Registration  
+# 1、voxelmorph: 基于学习的图像配准
 
-**voxelmorph** is a general purpose library for learning-based tools for alignment/registration, and more generally modelling with deformations.
+**voxelmorph**是一个通用的库，基于学习的用于对齐/配准的工具，以及更普遍的变形建模。
 
-# Tutorial
+# 2、教程
 
-Visit the [VoxelMorph tutorial](http://tutorial.voxelmorph.net/) to learn about VoxelMorph and Learning-based Registration. Here's an [additional small tutorial](https://colab.research.google.com/drive/1V0CutSIfmtgDJg1XIkEnGteJuw0u7qT-#scrollTo=h1KXYz-Nauwn) on warping annotations together with images, and another on [template (atlas) construction](https://colab.research.google.com/drive/1SkQbrWTQHpQFrG4J2WoBgGZC9yAzUas2?usp=sharing) with VoxelMorph.
+访问 [VoxelMorph tutorial](http://tutorial.voxelmorph.net/) 来了解VoxelMorph和基于学习的配准。 这是一个 [additional small tutorial](https://colab.research.google.com/drive/1V0CutSIfmtgDJg1XIkEnGteJuw0u7qT-#scrollTo=h1KXYz-Nauwn) 关于将注释与图像一起扭曲的问题, 并且另外一个是 [template (atlas) construction](https://colab.research.google.com/drive/1SkQbrWTQHpQFrG4J2WoBgGZC9yAzUas2?usp=sharing) with VoxelMorph.
 
 
-# Instructions
+# 3、说明
 
-To use the VoxelMorph library, either clone this repository and install the requirements listed in `setup.py` or install directly with pip.
+要使用VoxelMorph库，可以克隆这个仓库并安装`setup.py`中列出的要求，或者直接用pip安装：
 
 ```
 pip install voxelmorph
 ```
 
-## Pre-trained models
+## 3.1、预训练模型
 
-See list of pre-trained models available [here](data/readme.md#models).
+查看可用的预训练模型列表 [here](data/readme.md#models).
 
-## Training
+## 3.2、训练
 
-If you would like to train your own model, you will likely need to customize some of the data-loading code in `voxelmorph/generators.py` for your own datasets and data formats. However, it is possible to run many of the example scripts out-of-the-box, assuming that you provide a list of filenames in the training dataset. Training data can be in the NIfTI, MGZ, or npz (numpy) format, and it's assumed that each npz file in your data list has a `vol` parameter, which points to the image data to be registered, and an optional `seg` variable, which points to a corresponding discrete segmentation (for semi-supervised learning). It's also assumed that the shape of all training image data is consistent, but this, of course, can be handled in a customized generator if desired.
+如果你想训练你自己的模型，你可能需要为你自己的数据集和数据格式定制`voxelmorph/generators.py`中的一些数据加载代码。然而，假设你在训练数据集中提供了一个文件名列表，就有可能运行许多开箱即用的示例脚本。训练数据可以是NIfTI、MGZ或npz（numpy）格式，假定你的数据列表中的每个npz文件都有一个`vol`参数，指向要注册的图像数据，还有一个可选的`seg`变量，指向相应的离散分割（用于半监督式学习）。它还假定所有训练图像数据的形状是一致的，当然，如果需要的话，可以在定制的生成器中处理。
 
-For a given image list file `/images/list.txt` and output directory `/models/output`, the following script will train an image-to-image registration network (described in MICCAI 2018 by default) with an unsupervised loss. Model weights will be saved to a path specified by the `--model-dir` flag.
+对于一个给定的图像列表文件`/images/list.txt`和输出目录`/models/output`，下面的脚本将训练一个图像到图像的注册网络（默认在MICCAI 2018中描述），具有无监督的损失。模型权重将被保存到由`--model-dir`标志指定的路径。
 
 ```
 ./scripts/tf/train.py --img-list /images/list.txt --model-dir /models/output --gpu 0
 ```
 
-The `--img-prefix` and `--img-suffix` flags can be used to provide a consistent prefix or suffix to each path specified in the image list. Image-to-atlas registration can be enabled by providing an atlas file, e.g. `--atlas atlas.npz`. If you'd like to train using the original dense CVPR network (no diffeomorphism), use the `--int-steps 0` flag to specify no flow integration steps. Use the `--help` flag to inspect all of the command line options that can be used to fine-tune network architecture and training.
+`--img-prefix`和`--img-suffix`标志可以用来为图像列表中指定的每个路径提供一个一致的前缀或后缀。通过提供一个图集文件，如`--atlas atlas.npz`，可以实现图像到图集的注册。如果你想使用原始的密集CVPR网络进行训练（没有衍射），使用`--int-steps 0`标志来指定没有流量集成步骤。使用`--help`标志来检查所有的命令行选项，这些选项可以用来微调网络结构和训练。
 
 
-## Registration
+## 3.3、配准
 
-If you simply want to register two images, you can use the `register.py` script with the desired model file. For example, if we have a model `model.h5` trained to register a subject (moving) to an atlas (fixed), we could run:
+如果你只是想注册两个图像，你可以使用`register.py`脚本和所需的模型文件。例如，如果我们有一个模型`model.h5`被训练来注册一个主体（移动）和一个图集（固定），我们可以运行：
 
 ```
 ./scripts/tf/register.py --moving moving.nii.gz --fixed atlas.nii.gz --moved warped.nii.gz --model model.h5 --gpu 0
 ```
 
-This will save the moved image to `warped.nii.gz`. To also save the predicted deformation field, use the `--save-warp` flag. Both npz or nifty files can be used as input/output in this script.
+这将把移动后的图像保存为`warped.nii.gz`。要同时保存预测的变形场，请使用`--save-warp`标志。npz或nifty文件都可以作为这个脚本的输入/输出。
 
 
-## Testing (measuring Dice scores)
+## 3.4、测试（测量Dice分数）。
 
-To test the quality of a model by computing dice overlap between an atlas segmentation and warped test scan segmentations, run:
+为了通过计算图集分割和扭曲的测试扫描分割之间的骰子重叠来测试模型的质量，运行。
 
 ```
 ./scripts/tf/test.py --model model.h5 --atlas atlas.npz --scans scan01.npz scan02.npz scan03.npz --labels labels.npz
 ```
 
-Just like for the training data, the atlas and test npz files include `vol` and `seg` parameters and the `labels.npz` file contains a list of corresponding anatomical labels to include in the computed dice score.
+就像训练数据一样，图集和测试npz文件包括`vol`和`seg`参数，`labels.npz`文件包含一个相应的解剖标签列表，以包括在计算的骰子分数中。
 
 
-## Parameter choices
+## 3.5、参数选择
 
 
-### CVPR version
+### 3.5.1、CVPR版本
 
-For the CC loss function, we found a reg parameter of 1 to work best. For the MSE loss function, we found 0.01 to work best.
-
-
-### MICCAI version
-
-For our data, we found `image_sigma=0.01` and `prior_lambda=25` to work best.
-
-In the original MICCAI code, the parameters were applied after the scaling of the velocity field. With the newest code, this has been "fixed", with different default parameters reflecting the change. We recommend running the updated code. However, if you'd like to run the very original MICCAI2018 mode, please use `xy` indexing and `use_miccai_int` network option, with MICCAI2018 parameters.
+对于CC损失函数，我们发现reg参数为1的效果最好。对于MSE损失函数，我们发现0.01是最好的。
 
 
-## Spatial Transforms and Integration
+### 3.5.2、MICCAI版本
+
+对于我们的数据，我们发现`image_sigma=0.01`和`prior_lambda=25`效果最好。
+
+在最初的MICCAI代码中，这些参数是在速度场的缩放之后应用的。在最新的代码中，这一点已经被 "修复"，不同的默认参数反映了这种变化。我们建议运行更新后的代码。然而，如果你想运行非常原始的MICCAI2018模式，请使用`xy`索引和`use_miccai_int`网络选项，使用MICCAI2018参数。
+
+
+## 3.6、空间变换和整合
 
 - The spatial transform code, found at `voxelmorph.layers.SpatialTransformer`, accepts N-dimensional affine and dense transforms, including linear and nearest neighbor interpolation options. Note that original development of VoxelMorph used `xy` indexing, whereas we are now emphasizing `ij` indexing.
 
